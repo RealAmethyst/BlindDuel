@@ -14,7 +14,7 @@ namespace BlindDuel
     class PatchColorContainerGraphic
     {
         // parent.parent name → label
-        private static readonly Dictionary<string, string> ParentLabels = new()
+        internal static readonly Dictionary<string, string> ParentLabels = new()
         {
             { "ButtonMaintenance", "Maintenance" },
             { "ButtonBug", "Issues" },

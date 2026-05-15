@@ -22,6 +22,8 @@ namespace BlindDuel
             // Suppress right stick up/down from game during duels (SDL3 reads it directly)
             if (__result && InputMap.IsRightStickDuelSuppress(Type)) { __result = false; return; }
 
+            if (VirtualToolbar.IsActive) { __result = false; return; }
+
             if (__result) return;
             if (!Application.isFocused) return;
 
@@ -53,6 +55,8 @@ namespace BlindDuel
         static void Postfix(int Type, ref bool __result)
         {
             if (__result && InputMap.IsRightStickDuelSuppress(Type)) { __result = false; return; }
+
+            if (VirtualToolbar.IsActive) { __result = false; return; }
 
             if (__result) return;
             if (!Application.isFocused) return;

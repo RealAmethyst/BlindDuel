@@ -121,6 +121,8 @@ namespace BlindDuel
                 catch { Speech.SayImmediate("Points unavailable"); }
             }
 
+            VirtualToolbar.Update();
+
             // Duel log selection tracking
             if (DuelState.IsDuelLogOpen)
                 DuelLogReader.PollSelection();
