@@ -13,6 +13,7 @@ namespace BlindDuel
         // Section tracking — detect when user moves between deck/collection/main/extra
         private DeckEditViewController2.ViewType _lastViewType = DeckEditViewController2.ViewType.None;
         private DeckCard.LocationInDeck _lastDeckLocation = DeckCard.LocationInDeck.NA;
+        private string _lastFilterGroupName;
 
         public bool CanHandle(string viewControllerName) =>
             viewControllerName is "DeckSelect" or "DeckEdit" or "DeckBrowser";
@@ -21,6 +22,12 @@ namespace BlindDuel
         {
             _lastViewType = DeckEditViewController2.ViewType.None;
             _lastDeckLocation = DeckCard.LocationInDeck.NA;
+            _lastFilterGroupName = null;
+
+            if (viewControllerName is "DeckEdit" or "DeckSelect")
+                VirtualToolbar.EnableFor(this);
+            else
+                VirtualToolbar.Disable();
 
             if (viewControllerName == "DeckEdit")
                 return AnnounceDeckEdit();
@@ -33,6 +40,16 @@ namespace BlindDuel
 
         public string OnButtonFocused(SelectionButton button)
         {
+            // FilterDialog toggle — prepend the group name so users know which of
+            // ~11 filter categories (Rarity, Frame, Type, ATK, ...) they're in.
+            try
+            {
+                var filterGroup = button.GetComponentInParent<FilterDialog.FilterGroup>();
+                if (filterGroup != null)
+                    return HandleFilterToggle(button, filterGroup);
+            }
+            catch (Exception ex) { Log.Write($"[DeckHandler] FilterGroup: {ex.Message}"); }
+
             // DeckBox widget (deck list items on DeckSelect)
             try
             {
@@ -128,6 +145,76 @@ namespace BlindDuel
         }
 
         // --- Button handlers ---
+
+        private string HandleFilterToggle(SelectionButton button, FilterDialog.FilterGroup group)
+        {
+            string groupName = group.m_GroupNameText?.text?.Trim();
+
+            // Dedupe — only announce the group name when moving between categories,
+            // so navigating 25 type filters doesn't repeat "Type" every step.
+            string announceGroup = groupName == _lastFilterGroupName ? null : groupName;
+            _lastFilterGroupName = groupName;
+
+            // Range filter (ATK/DEF) — min/max input fields, not toggles.
+            var slider = button.GetComponentInParent<FilterSlider>();
+            if (slider != null)
+                return BuildSliderText(button, slider, announceGroup);
+
+            string buttonText = TextExtractor.ExtractFirst(button.gameObject);
+
+            // Link arrow filters use labels "Link_1".."Link_8" — N is the 1-based bit
+            // index into Content.LinkMarkerBit (1=UpLeft, 2=Up, ..., 8=DownRight).
+            if (string.IsNullOrEmpty(buttonText))
+            {
+                var linkMark = button.GetComponentInParent<FilterLinkMark>();
+                string label = linkMark?.m_Label;
+                if (label != null && label.StartsWith("Link_")
+                    && int.TryParse(label.Substring(5), out int n)
+                    && n >= 1 && n <= 8)
+                    buttonText = FormatLinkArrows(1 << (n - 1));
+            }
+
+            if (string.IsNullOrEmpty(buttonText)) return null;
+
+            string result = !string.IsNullOrEmpty(announceGroup)
+                ? $"{announceGroup}, {buttonText}"
+                : buttonText;
+
+            var (index, total) = TransformSearch.GetButtonIndex(button);
+            if (total > 1)
+                result += $"\n{index} of {total}";
+
+            return result;
+        }
+
+        private static string BuildSliderText(SelectionButton button, FilterSlider slider, string groupName)
+        {
+            string side;
+            string value;
+
+            if (button == slider.m_ButtonMin)
+            {
+                side = "Min";
+                value = slider.m_InputFieldWidgetMin?.m_TMPInputFieldCache?.text;
+            }
+            else if (button == slider.m_ButtonMax)
+            {
+                side = "Max";
+                value = slider.m_InputFieldWidgetMax?.m_TMPInputFieldCache?.text;
+            }
+            else
+            {
+                return null;
+            }
+
+            // Strip zero-width spaces and whitespace — the placeholder text when empty.
+            value = value?.Replace("​", "").Trim();
+
+            string result = !string.IsNullOrEmpty(groupName) ? $"{groupName}, {side}" : side;
+            if (!string.IsNullOrEmpty(value))
+                result += $", {value}";
+            return result;
+        }
 
         private string HandleDeckBox(DeckBox deckBox)
         {
