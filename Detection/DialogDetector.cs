@@ -58,6 +58,7 @@ namespace BlindDuel
                             labeled.Add((r.Path, r.Text));
 
                         var (title, body) = ElementReader.ExtractTitleAndBody(labeled);
+                        if (body != null && ElementReader.LooksLikeButtonText(body)) body = null;
 
                         if (ElementReader.IsPlaceholder(title))
                         {
@@ -84,9 +85,14 @@ namespace BlindDuel
                     }
                 }
 
-                // Reset when no active dialog exists (dialog truly closed)
+                // Reset when no active dialog exists (dialog truly closed). Also clear
+                // the AnnounceScreen header dedup so an identical dialog re-opening
+                // doesn't get silently suppressed by the screen-level dedup check.
                 if (!foundActive)
+                {
                     NavigationState.LastDialogTitle = "";
+                    Speech.ResetHeaderDedup();
+                }
             }
             catch (Exception ex) { Log.Write($"[DialogDetector] {ex.Message}"); }
         }
@@ -179,6 +185,7 @@ namespace BlindDuel
                     labeled.Add((r.Path, r.Text));
 
                 var (title, body) = ElementReader.ExtractTitleAndBody(labeled);
+                if (body != null && ElementReader.LooksLikeButtonText(body)) body = null;
                 if (string.IsNullOrEmpty(title)) return;
 
                 // Mark as announced so Poll() won't re-announce

@@ -255,6 +255,12 @@ namespace BlindDuel
             if (string.IsNullOrWhiteSpace(text))
                 text = FindSiblingText(__instance.transform) ?? text;
 
+            // InputDigit dialog +/- buttons: replace the symbolic "-" / "＋" label
+            // with a spoken word so the screen reader doesn't fuse it with the
+            // sibling-index suffix into a misleading negative number.
+            string digitLabel = InputDigitWatcher.GetButtonLabel(__instance);
+            if (digitLabel != null) text = digitLabel;
+
             // Let the active handler enhance the text
             string enhanced = null;
             var handler = HandlerRegistry.Current;
