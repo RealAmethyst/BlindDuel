@@ -143,6 +143,28 @@ namespace BlindDuel
             return (title, body);
         }
 
+        // Heuristic for "this text is the label of an action button, not body content":
+        // short single token, no lowercase letters, at least one uppercase letter.
+        // Catches OK / CANCEL / YES / NO / AGREE / etc. while leaving numbers, dates,
+        // and any mixed-case text intact. Callers should only apply this where the
+        // focused button will speak its own label separately (i.e. dialogs).
+        public static bool LooksLikeButtonText(string text)
+        {
+            if (string.IsNullOrEmpty(text) || text.Length > 10) return false;
+            bool sawUpper = false;
+            for (int i = 0; i < text.Length; i++)
+            {
+                char c = text[i];
+                if (char.IsWhiteSpace(c)) return false;
+                if (char.IsLetter(c))
+                {
+                    if (!char.IsUpper(c)) return false;
+                    sawUpper = true;
+                }
+            }
+            return sawUpper;
+        }
+
         /// <summary>
         /// Detect placeholder text (unreplaced key names — long strings with no spaces).
         /// </summary>

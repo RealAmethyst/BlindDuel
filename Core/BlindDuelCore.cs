@@ -141,8 +141,20 @@ namespace BlindDuel
             DialogDetector.Poll();
             ScreenDetector.Poll();
 
+            // Speak the current value of any open InputDigit (+/-) dialog as it changes.
+            InputDigitWatcher.Poll();
+
             // Settings slider / toggle value-change announcement
             SettingsHandler.PollSettingValue();
+
+            // Re-announce friend-selection count when it changes on the RoomInvite screen.
+            RoomInviteHandler.Poll();
+
+            // Re-announce member / spectator counts + seat occupancy in the Duel Room.
+            RoomHandler.Poll();
+
+            // Re-announce ON/OFF toggle and other in-row setting flips on Create Room.
+            RoomCreateHandler.Poll();
         }
 
         /// <summary>
@@ -168,6 +180,7 @@ namespace BlindDuel
         {
             CardReader.ReadPreviewAndSpeak();
         }
+
 
         /// <summary>
         /// Invokable method for reading MDMarkup article content (notifications, news).

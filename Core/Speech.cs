@@ -158,6 +158,16 @@ namespace BlindDuel
         }
 
         /// <summary>
+        /// Reset the header dedup so the next AnnounceScreen speaks even if it
+        /// matches the last header. Called when a dialog closes — otherwise the
+        /// same dialog re-opening with identical text gets silently suppressed.
+        /// </summary>
+        public static void ResetHeaderDedup()
+        {
+            _lastHeader = "";
+        }
+
+        /// <summary>
         /// Silence current speech.
         /// </summary>
         public static void Silence()
