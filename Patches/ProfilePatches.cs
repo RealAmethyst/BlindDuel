@@ -69,7 +69,7 @@ namespace BlindDuel
                         catch (Exception ex)
                         {
                             Log.Write($"[ProfileData] TextData error at {d}: {ex.Message}");
-                            break; // stop on first error
+                            continue; // skip bad entry, keep reading remaining stats
                         }
                     }
                 }

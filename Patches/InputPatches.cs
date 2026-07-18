@@ -19,26 +19,33 @@ namespace BlindDuel
 
         static void Postfix(int Type, ref bool __result)
         {
-            // Suppress right stick up/down from game during duels (SDL3 reads it directly)
-            if (__result && InputMap.IsRightStickDuelSuppress(Type)) { __result = false; return; }
+            try
+            {
+                // Suppress right stick up/down from game during duels (SDL3 reads it directly)
+                if (__result && InputMap.IsRightStickDuelSuppress(Type)) { __result = false; return; }
 
-            if (__result) return;
-            if (!Application.isFocused) return;
+                if (__result) return;
+                if (!Application.isFocused) return;
 
-            var map = GetMap();
-            if (map == null) return;
+                var map = GetMap();
+                if (map == null) return;
 
-            if (!map.TryGetValue(Type, out var keyCode)) return;
+                if (!map.TryGetValue(Type, out var keyCode)) return;
 
-            // Suppress Up/Down when Ctrl is held during a duel (mod handles those)
-            if (IsCtrlDuelSuppress(Type)) return;
-            // Escape → Option2 (touchpad) only during duels
-            if (InputMap.IsDuelOnlySuppress(Type)) return;
-            // Don't fire Cancel (Backspace) while a text input field is active —
-            // the user is deleting characters, not cancelling the screen.
-            if (InputMap.IsInputEditingSuppress(Type)) return;
+                // Suppress Up/Down when Ctrl is held during a duel (mod handles those)
+                if (IsCtrlDuelSuppress(Type)) return;
+                // Escape → Option2 (touchpad) only during duels
+                if (InputMap.IsDuelOnlySuppress(Type)) return;
+                // Don't fire Cancel (Backspace) while a text input field is active —
+                // the user is deleting characters, not cancelling the screen.
+                if (InputMap.IsInputEditingSuppress(Type)) return;
 
-            __result = Input.GetKeyDown(keyCode);
+                __result = Input.GetKeyDown(keyCode);
+            }
+            catch (Exception ex)
+            {
+                Log.Write($"[PatchGamePadGetKeyDown] {ex.Message}");
+            }
         }
 
         static Dictionary<int, KeyCode> GetMap() => _map ??= InputMap.Build();
@@ -52,21 +59,28 @@ namespace BlindDuel
 
         static void Postfix(int Type, ref bool __result)
         {
-            if (__result && InputMap.IsRightStickDuelSuppress(Type)) { __result = false; return; }
+            try
+            {
+                if (__result && InputMap.IsRightStickDuelSuppress(Type)) { __result = false; return; }
 
-            if (__result) return;
-            if (!Application.isFocused) return;
+                if (__result) return;
+                if (!Application.isFocused) return;
 
-            var map = GetMap();
-            if (map == null) return;
+                var map = GetMap();
+                if (map == null) return;
 
-            if (!map.TryGetValue(Type, out var keyCode)) return;
+                if (!map.TryGetValue(Type, out var keyCode)) return;
 
-            if (IsCtrlDuelSuppress(Type)) return;
-            if (InputMap.IsDuelOnlySuppress(Type)) return;
-            if (InputMap.IsInputEditingSuppress(Type)) return;
+                if (IsCtrlDuelSuppress(Type)) return;
+                if (InputMap.IsDuelOnlySuppress(Type)) return;
+                if (InputMap.IsInputEditingSuppress(Type)) return;
 
-            __result = Input.GetKey(keyCode);
+                __result = Input.GetKey(keyCode);
+            }
+            catch (Exception ex)
+            {
+                Log.Write($"[PatchGamePadGetKey] {ex.Message}");
+            }
         }
 
         static Dictionary<int, KeyCode> GetMap() => _map ??= InputMap.Build();
