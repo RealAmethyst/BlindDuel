@@ -29,18 +29,13 @@ namespace BlindDuel
                 int safeMax = Math.Min(templates.Count, texts.Count);
 
                 // Walk up from the button to find the row entity the scroll view recognizes
-                int dataIndex = -1;
-                Transform t = button.transform;
-                for (int i = 0; i < 6 && t != null; i++)
-                {
-                    int idx = scroll.GetDataIndexByEntity(t.gameObject);
-                    if (idx >= 0 && idx < safeMax)
+                int dataIndex = TransformSearch.TryResolveByAncestor<int>(button.transform, 6,
+                    go =>
                     {
-                        dataIndex = idx;
-                        break;
-                    }
-                    t = t.parent;
-                }
+                        int idx = scroll.GetDataIndexByEntity(go);
+                        return idx >= 0 && idx < safeMax ? (true, idx) : (false, 0);
+                    },
+                    out int found) ? found : -1;
 
                 string itemText = TextExtractor.ExtractFirst(button.gameObject);
                 if (string.IsNullOrWhiteSpace(itemText) && dataIndex >= 0)

@@ -27,7 +27,7 @@ namespace BlindDuel
 
             try
             {
-                var profileVC = GetProfileVC();
+                var profileVC = ScreenDetector.GetFocusVC<ProfileViewController>();
                 if (profileVC == null)
                 {
                     Speech.AnnounceScreen(announcement);
@@ -119,8 +119,7 @@ namespace BlindDuel
             try
             {
                 // Data screen has no meaningful button navigation — let default handle it
-                var focusVC = ScreenDetector.GetFocusVC();
-                if (focusVC?.TryCast<ProfileDataViewController>() != null)
+                if (ScreenDetector.GetFocusVC<ProfileDataViewController>() != null)
                     return null;
 
                 string text = TextExtractor.ExtractFirst(button.gameObject);
@@ -128,24 +127,9 @@ namespace BlindDuel
 
                 // Walk up to find a parent that contains multiple SelectionButton children
                 // (buttons may be wrapped in individual containers)
-                var current = button.transform.parent;
-                while (current != null)
-                {
-                    int idx = 0, total = 0;
-                    for (int i = 0; i < current.childCount; i++)
-                    {
-                        var child = current.GetChild(i);
-                        if (child == null || !child.gameObject.activeInHierarchy) continue;
-                        var sb = child.GetComponentInChildren<SelectionButton>(true);
-                        if (sb == null) continue;
-                        total++;
-                        if (sb == button) idx = total;
-                    }
-                    if (total > 1 && idx > 0)
-                        return $"{text}, {idx} of {total}";
-
-                    current = current.parent;
-                }
+                var (idx, total) = TransformSearch.GetButtonIndexAmongAncestors(button);
+                if (total > 1 && idx > 0)
+                    return $"{text}, {idx} of {total}";
 
                 return text;
             }
@@ -195,16 +179,6 @@ namespace BlindDuel
                     return $"{s[..3]}-{s[3..6]}-{s[6..]}";
                 return s;
             }
-        }
-
-        private static ProfileViewController GetProfileVC()
-        {
-            try
-            {
-                var focusVC = ScreenDetector.GetFocusVC();
-                return focusVC?.TryCast<ProfileViewController>();
-            }
-            catch { return null; }
         }
     }
 }

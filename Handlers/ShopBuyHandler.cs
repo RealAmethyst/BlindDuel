@@ -50,11 +50,11 @@ namespace BlindDuel
 
         public string OnButtonFocused(SelectionButton button)
         {
+            var buyVC = ScreenDetector.GetFocusVC<ShopBuyViewController>();
+
             // Try to read buy button details (pack selector: "1 Pack", "10 Packs", etc.)
             try
             {
-                var focusVC = ScreenDetector.GetFocusVC();
-                var buyVC = focusVC?.TryCast<ShopBuyViewController>();
                 var buyGroup = buyVC?.m_BuyButtonGroupWidget;
                 var buttons = buyGroup?.m_ButtonWidgets;
 
@@ -102,8 +102,6 @@ namespace BlindDuel
             // Try highlight card thumbnails (featured cards at bottom)
             try
             {
-                var focusVC = ScreenDetector.GetFocusVC();
-                var buyVC = focusVC?.TryCast<ShopBuyViewController>();
                 var thumbs = buyVC?.m_HighlightWidget?.m_ThumbWidgets;
                 var mrks = buyVC?.m_CardBrowseMrks;
                 var rares = buyVC?.m_CardBrowseRareList;

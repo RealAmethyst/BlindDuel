@@ -17,7 +17,7 @@ namespace BlindDuel
 
             try
             {
-                int count = GetVC()?.dataList?.Count ?? -1;
+                int count = ScreenDetector.GetFocusVC<RoomEntryViewController>()?.dataList?.Count ?? -1;
                 if (count == 0)
                     announcement += ", no rooms available";
                 else if (count > 0)
@@ -36,7 +36,7 @@ namespace BlindDuel
                 if (button.name == "ButtonReload") return "Reload room list";
                 if (button.name == "ButtonFilter") return "Filter rooms";
 
-                var vc = GetVC();
+                var vc = ScreenDetector.GetFocusVC<RoomEntryViewController>();
                 if (vc == null) return null;
 
                 if (TryGetDataIndex(vc, button, out int idx))
@@ -52,18 +52,17 @@ namespace BlindDuel
             var isv = vc.isv;
             if (isv == null) return false;
 
-            Transform t = button.transform;
-            for (int i = 0; i < 8 && t != null; i++)
-            {
-                try
+            return TransformSearch.TryResolveByAncestor<int>(button.transform, 8,
+                go =>
                 {
-                    int candidate = isv.GetDataIndexByEntity(t.gameObject);
-                    if (candidate >= 0) { idx = candidate; return true; }
-                }
-                catch { }
-                t = t.parent;
-            }
-            return false;
+                    try
+                    {
+                        int candidate = isv.GetDataIndexByEntity(go);
+                        return candidate >= 0 ? (true, candidate) : (false, 0);
+                    }
+                    catch { return (false, 0); }
+                },
+                out idx);
         }
 
         private static string FormatRoom(RoomEntryViewController vc, int idx)
@@ -94,12 +93,6 @@ namespace BlindDuel
                 parts.Add($"{idx + 1} of {total}");
 
             return string.Join(", ", parts);
-        }
-
-        private static RoomEntryViewController GetVC()
-        {
-            try { return ScreenDetector.GetFocusVC()?.TryCast<RoomEntryViewController>(); }
-            catch { return null; }
         }
     }
 }

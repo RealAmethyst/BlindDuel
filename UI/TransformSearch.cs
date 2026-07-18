@@ -58,6 +58,61 @@ namespace BlindDuel
         }
 
         /// <summary>
+        /// Walk up from <paramref name="start"/> for up to <paramref name="maxLevels"/> ancestor
+        /// levels (inclusive of <paramref name="start"/> itself), invoking <paramref name="resolve"/>
+        /// at each level. Returns the first level where resolve reports a hit.
+        /// Replaces the copy-pasted "walk up N levels trying a resolver" loops scattered
+        /// across the room/profile handlers.
+        /// </summary>
+        public static bool TryResolveByAncestor<T>(
+            Transform start, int maxLevels,
+            Func<GameObject, (bool found, T value)> resolve,
+            out T result)
+        {
+            Transform t = start;
+            for (int i = 0; i < maxLevels && t != null; i++)
+            {
+                var (found, value) = resolve(t.gameObject);
+                if (found)
+                {
+                    result = value;
+                    return true;
+                }
+                t = t.parent;
+            }
+            result = default;
+            return false;
+        }
+
+        /// <summary>
+        /// Walk up parent levels from a button looking for the first ancestor level whose
+        /// active children include more than one SelectionButton (searched inclusive of
+        /// inactive descendants) — i.e. the level the button should be indexed within.
+        /// Returns (index, total) at that level, or (0, 0) if no such level exists.
+        /// </summary>
+        public static (int index, int total) GetButtonIndexAmongAncestors(SelectionButton button)
+        {
+            var current = button.transform.parent;
+            while (current != null)
+            {
+                int idx = 0, total = 0;
+                for (int i = 0; i < current.childCount; i++)
+                {
+                    var child = current.GetChild(i);
+                    if (child == null || !child.gameObject.activeInHierarchy) continue;
+                    var sb = child.GetComponentInChildren<SelectionButton>(true);
+                    if (sb == null) continue;
+                    total++;
+                    if (sb == button) idx = total;
+                }
+                if (total > 1 && idx > 0) return (idx, total);
+
+                current = current.parent;
+            }
+            return (0, 0);
+        }
+
+        /// <summary>
         /// Get the index and total count of a SelectionButton among its active siblings.
         /// Returns (index, total). Returns (0, 0) if not found or only one button.
         /// </summary>

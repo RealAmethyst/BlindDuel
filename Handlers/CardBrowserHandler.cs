@@ -37,11 +37,8 @@ namespace BlindDuel
 
             try
             {
-                var focusVC = ScreenDetector.GetFocusVC();
-                if (focusVC == null) return null;
-
                 // CardListBrowser — InfinityScroll-based card list (pack contents, structure decks)
-                var listBrowserVC = focusVC.TryCast<CardListBrowserViewController>();
+                var listBrowserVC = ScreenDetector.GetFocusVC<CardListBrowserViewController>();
                 if (listBrowserVC != null)
                     return HandleCardListBrowser(button, listBrowserVC);
             }
@@ -58,17 +55,10 @@ namespace BlindDuel
             if (widgetDic == null) return null;
 
             // Walk up from button to find the CardWidget in the dictionary
-            CardListBrowserViewController.CardWidget cardWidget = null;
-            Transform current = button.transform;
-            for (int i = 0; i < 5 && current != null; i++)
-            {
-                if (widgetDic.TryGetValue(current.gameObject, out var widget))
-                {
-                    cardWidget = widget;
-                    break;
-                }
-                current = current.parent;
-            }
+            TransformSearch.TryResolveByAncestor<CardListBrowserViewController.CardWidget>(
+                button.transform, 5,
+                go => widgetDic.TryGetValue(go, out var widget) ? (true, widget) : (false, null),
+                out var cardWidget);
 
             if (cardWidget == null) return null;
 

@@ -101,21 +101,8 @@ namespace BlindDuel
             return null;
         }
 
-        private static CardPackCardActor FindActor(SelectionButton button)
-        {
-            var transform = button.transform;
-            for (int i = 0; i < 5 && transform != null; i++)
-            {
-                try
-                {
-                    var actor = transform.GetComponent<CardPackCardActor>();
-                    if (actor != null) return actor;
-                }
-                catch { }
-                transform = transform.parent;
-            }
-            return null;
-        }
+        private static CardPackCardActor FindActor(SelectionButton button) =>
+            button.GetComponentInParent<CardPackCardActor>();
 
         private static int FindResultMrk(SelectionButton button, out bool isNew)
         {

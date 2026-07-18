@@ -341,20 +341,11 @@ namespace BlindDuel
 
         // --- VC / Context access ---
 
-        private static MissionViewController GetMissionVC()
-        {
-            try
-            {
-                return ScreenDetector.GetFocusVC()?.TryCast<MissionViewController>();
-            }
-            catch { return null; }
-        }
-
         private static ResidentMissionContent GetResidentContent()
         {
             try
             {
-                var vc = GetMissionVC();
+                var vc = ScreenDetector.GetFocusVC<MissionViewController>();
                 if (vc == null) return null;
 
                 var contentMap = vc.m_ContentMap;

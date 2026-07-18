@@ -31,7 +31,7 @@ namespace BlindDuel
 
             try
             {
-                var vc = GetVC();
+                var vc = ScreenDetector.GetFocusVC<RoomInviteViewController>();
                 if (vc != null && vc.maxInvite > 0)
                 {
                     announcement += $", {vc.currentInvite} of {vc.maxInvite} selected";
@@ -49,7 +49,7 @@ namespace BlindDuel
         {
             try
             {
-                var vc = GetVC();
+                var vc = ScreenDetector.GetFocusVC<RoomInviteViewController>();
                 if (vc == null) return null;
 
                 if (TryGetFocusedRow(vc, button, out var widget, out var rowGo))
@@ -76,7 +76,7 @@ namespace BlindDuel
                     return;
                 }
 
-                var vc = GetVC();
+                var vc = ScreenDetector.GetFocusVC<RoomInviteViewController>();
                 if (vc == null) return;
 
                 var list = vc.dataList;
@@ -126,18 +126,17 @@ namespace BlindDuel
             var map = vc.m_EntityWidgetMap;
             if (map == null) return false;
 
-            Transform t = button.transform;
-            for (int i = 0; i < 6 && t != null; i++)
+            bool found = TransformSearch.TryResolveByAncestor<(FriendWidget widget, GameObject rowGo)>(
+                button.transform, 6,
+                go => map.TryGetValue(go, out var w) ? (true, (w, go)) : (false, default),
+                out var result);
+
+            if (found)
             {
-                if (map.TryGetValue(t.gameObject, out var w))
-                {
-                    widget = w;
-                    rowGo = t.gameObject;
-                    return true;
-                }
-                t = t.parent;
+                widget = result.widget;
+                rowGo = result.rowGo;
             }
-            return false;
+            return found;
         }
 
         private static string FormatFriendRow(
@@ -183,12 +182,6 @@ namespace BlindDuel
                 result += $", {idx + 1} of {total}";
 
             return result;
-        }
-
-        private static RoomInviteViewController GetVC()
-        {
-            try { return ScreenDetector.GetFocusVC()?.TryCast<RoomInviteViewController>(); }
-            catch { return null; }
         }
     }
 }

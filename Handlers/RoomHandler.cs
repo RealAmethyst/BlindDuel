@@ -39,7 +39,7 @@ namespace BlindDuel
                     return;
                 }
 
-                var vc = GetRoomVC();
+                var vc = ScreenDetector.GetFocusVC<RoomViewController>();
                 var info = vc?.roomBehaviour?.roomInfo;
                 if (info == null) return;
 
@@ -146,7 +146,7 @@ namespace BlindDuel
 
             try
             {
-                var info = GetRoomVC()?.roomBehaviour?.roomInfo;
+                var info = ScreenDetector.GetFocusVC<RoomViewController>()?.roomBehaviour?.roomInfo;
                 if (info == null) return fallback;
 
                 string name = info.roomName?.Trim();
@@ -176,7 +176,7 @@ namespace BlindDuel
         {
             try
             {
-                var vc = GetRoomVC();
+                var vc = ScreenDetector.GetFocusVC<RoomViewController>();
                 if (vc != null && TryGetTableIndex(vc, button, out int tableIdx))
                     return HandleTableRow(vc, tableIdx, button.name);
 
@@ -223,17 +223,17 @@ namespace BlindDuel
                 var isv = vc.isv;
                 if (isv == null) return false;
 
-                Transform t = button.transform;
-                for (int i = 0; i < 8 && t != null; i++)
-                {
-                    try
+                return TransformSearch.TryResolveByAncestor<int>(button.transform, 8,
+                    go =>
                     {
-                        int candidate = isv.GetDataIndexByEntity(t.gameObject);
-                        if (candidate >= 0) { idx = candidate; return true; }
-                    }
-                    catch { }
-                    t = t.parent;
-                }
+                        try
+                        {
+                            int candidate = isv.GetDataIndexByEntity(go);
+                            return candidate >= 0 ? (true, candidate) : (false, 0);
+                        }
+                        catch { return (false, 0); }
+                    },
+                    out idx);
             }
             catch { }
             return false;
@@ -346,31 +346,10 @@ namespace BlindDuel
             string text = TextExtractor.ExtractFirst(button.gameObject);
             if (string.IsNullOrWhiteSpace(text)) return null;
 
-            var current = button.transform.parent;
-            while (current != null)
-            {
-                int idx = 0, total = 0;
-                for (int i = 0; i < current.childCount; i++)
-                {
-                    var child = current.GetChild(i);
-                    if (child == null || !child.gameObject.activeInHierarchy) continue;
-                    var sb = child.GetComponentInChildren<SelectionButton>(true);
-                    if (sb == null) continue;
-                    total++;
-                    if (sb == button) idx = total;
-                }
-                if (total > 1 && idx > 0)
-                    return $"{text}, {idx} of {total}";
-
-                current = current.parent;
-            }
+            var (idx, total) = TransformSearch.GetButtonIndexAmongAncestors(button);
+            if (total > 1 && idx > 0)
+                return $"{text}, {idx} of {total}";
             return text;
-        }
-
-        private static RoomViewController GetRoomVC()
-        {
-            try { return ScreenDetector.GetFocusVC()?.TryCast<RoomViewController>(); }
-            catch { return null; }
         }
     }
 }

@@ -110,10 +110,7 @@ namespace BlindDuel
         {
             try
             {
-                var focusVC = ScreenDetector.GetFocusVC();
-                if (focusVC == null) return null;
-
-                var gemShopVC = focusVC.TryCast<GemShopViewController>();
+                var gemShopVC = ScreenDetector.GetFocusVC<GemShopViewController>();
                 if (gemShopVC == null) return null;
 
                 var entityMap = gemShopVC.m_EntityWidgetMap;
@@ -137,8 +134,7 @@ namespace BlindDuel
         {
             try
             {
-                var focusVC = ScreenDetector.GetFocusVC();
-                var gemShopVC = focusVC?.TryCast<GemShopViewController>();
+                var gemShopVC = ScreenDetector.GetFocusVC<GemShopViewController>();
                 return gemShopVC?.m_ProductContexts?.Count ?? 0;
             }
             catch { return 0; }

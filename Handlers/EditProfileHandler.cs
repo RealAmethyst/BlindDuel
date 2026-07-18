@@ -27,7 +27,7 @@ namespace BlindDuel
         {
             try
             {
-                var vc = ScreenDetector.GetFocusVC()?.TryCast<ProfileEditViewController>();
+                var vc = ScreenDetector.GetFocusVC<ProfileEditViewController>();
                 if (vc == null) return null;
 
                 // Left-column category button? (inside SideMenu hierarchy)
@@ -58,31 +58,10 @@ namespace BlindDuel
             string name = TextExtractor.ExtractFirst(button.gameObject);
             if (string.IsNullOrWhiteSpace(name)) return null;
 
-            var (idx, total) = CountCategorySiblings(button);
+            var (idx, total) = TransformSearch.GetButtonIndexAmongAncestors(button);
             if (total > 1 && idx > 0)
                 return $"{name}, {idx} of {total}";
             return name;
-        }
-
-        private static (int idx, int total) CountCategorySiblings(SelectionButton button)
-        {
-            var current = button.transform.parent;
-            while (current != null)
-            {
-                int idx = 0, total = 0;
-                for (int i = 0; i < current.childCount; i++)
-                {
-                    var child = current.GetChild(i);
-                    if (child == null || !child.gameObject.activeInHierarchy) continue;
-                    var sb = child.GetComponentInChildren<SelectionButton>(true);
-                    if (sb == null) continue;
-                    total++;
-                    if (sb == button) idx = total;
-                }
-                if (total > 1 && idx > 0) return (idx, total);
-                current = current.parent;
-            }
-            return (0, 0);
         }
 
         // --- Middle-grid item cells ---
@@ -165,15 +144,14 @@ namespace BlindDuel
         {
             if (scroll == null || total == 0) return null;
 
-            int dataIndex = -1;
-            Transform t = button.transform;
-            for (int i = 0; i < 6 && t != null; i++)
-            {
-                int idx = scroll.GetDataIndexByEntity(t.gameObject);
-                if (idx >= 0 && idx < total) { dataIndex = idx; break; }
-                t = t.parent;
-            }
-            if (dataIndex < 0) return null;
+            if (!TransformSearch.TryResolveByAncestor<int>(button.transform, 6,
+                    go =>
+                    {
+                        int idx = scroll.GetDataIndexByEntity(go);
+                        return idx >= 0 && idx < total ? (true, idx) : (false, 0);
+                    },
+                    out int dataIndex))
+                return null;
 
             int id = idAt(dataIndex);
             return new GridQuery

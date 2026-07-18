@@ -104,7 +104,7 @@ namespace BlindDuel
         {
             index = 0; total = 0;
 
-            var vc = ScreenDetector.GetFocusVC()?.TryCast<SettingMenuViewController>();
+            var vc = ScreenDetector.GetFocusVC<SettingMenuViewController>();
             if (vc?.pageInfo == null) return null;
 
             int buttonId = button.gameObject.GetInstanceID();
