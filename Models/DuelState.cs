@@ -9,8 +9,6 @@ namespace BlindDuel
     /// </summary>
     public static class DuelState
     {
-        public static List<CardRoot> Cards { get; } = new();
-
         /// <summary>
         /// True between DuelEndOperation.Setup and DuelEndMessage.Setup —
         /// the duel result animation is playing and buttons should not speak yet.
@@ -40,14 +38,6 @@ namespace BlindDuel
         /// showing match tips) and card reading should be suppressed.
         /// </summary>
         public static bool HasPhaseStarted { get; set; }
-
-        /// <summary>
-        /// True when the player is navigating a CardSelectionList popup
-        /// (Extra Deck summon, material selection, effect targets).
-        /// SetDescriptionArea only processes card reads when this is true during duels;
-        /// all other field card reading goes through InvokeFocusField.
-        /// </summary>
-        public static bool InSelectionList { get; set; }
 
         /// <summary>
         /// True briefly after a game event message (summon, effect, phase banner, etc.)
@@ -138,13 +128,11 @@ namespace BlindDuel
 
         public static void Clear()
         {
-            Cards.Clear();
             IsShowingResult = false;
             IsDuelLogOpen = false;
             LogScrollView = null;
             LogController = null;
             HasPhaseStarted = false;
-            InSelectionList = false;
             MessageJustAnnounced = false;
             HasPendingSelection = false;
             SuppressNextFieldFocus = false;
@@ -158,11 +146,6 @@ namespace BlindDuel
             BrowseIndex = -1;
             BrowseDirection = 1;
             LastBrowseLogicalIdx = -1;
-        }
-
-        public static CardRoot FindCardAtPosition(UnityEngine.Vector3 position)
-        {
-            return Cards.Find(c => c.cardLocator.pos == position);
         }
 
         /// <summary>
