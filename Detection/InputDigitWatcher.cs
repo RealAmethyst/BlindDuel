@@ -62,7 +62,7 @@ namespace BlindDuel
                     Speech.SayImmediate(current.ToString());
                 }
             }
-            catch { }
+            catch (Exception ex) { Log.Write($"[InputDigitWatcher] {ex.Message}"); }
         }
     }
 }

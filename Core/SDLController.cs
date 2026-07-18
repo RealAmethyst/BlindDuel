@@ -94,8 +94,8 @@ namespace BlindDuel
         private static string _controllerName = "";
 
         // Axis state for trigger detection (current vs last frame)
-        private static short _lastRightY, _lastRightX;
-        private static short _rightY, _rightX;
+        private static short _lastRightY;
+        private static short _rightY;
 
         private const short StickThreshold = 16000; // ~50% of 32767
 
@@ -160,9 +160,7 @@ namespace BlindDuel
 
                 // Store last frame, read current
                 _lastRightY = _rightY;
-                _lastRightX = _rightX;
                 _rightY = SDL_GetGamepadAxis(_gamepad, Axis.RightY);
-                _rightX = SDL_GetGamepadAxis(_gamepad, Axis.RightX);
             }
             catch (Exception ex)
             {

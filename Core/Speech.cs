@@ -44,7 +44,6 @@ namespace BlindDuel
 
         /// <summary>
         /// Speak a menu item when navigating. Interrupts current speech.
-        /// After this, call SayIndex() and SayDescription() to queue details.
         /// </summary>
         public static void SayItem(string text)
         {
@@ -58,31 +57,6 @@ namespace BlindDuel
             MelonLogger.Msg($"item: {text}");
             ScreenReader.Say(text);
             RecordHistory(text);
-        }
-
-        /// <summary>
-        /// Queue the item's position index after the item name.
-        /// e.g. "2 of 5"
-        /// </summary>
-        public static void SayIndex(int current, int total)
-        {
-            if (total <= 1) return;
-            string text = $"{current} of {total}";
-            Log.Write($"[Index] {text}");
-            ScreenReader.SayQueued(text);
-        }
-
-        /// <summary>
-        /// Queue descriptive/help text after the item name and index.
-        /// </summary>
-        public static void SayDescription(string text)
-        {
-            if (string.IsNullOrWhiteSpace(text)) return;
-            text = TextUtil.StripTags(text).Trim();
-            if (string.IsNullOrWhiteSpace(text)) return;
-
-            Log.Write($"[Desc] {text}");
-            ScreenReader.SayQueued(text);
         }
 
         /// <summary>
