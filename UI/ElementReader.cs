@@ -38,12 +38,17 @@ namespace BlindDuel
                     GameObject go = elem.gameObject;
                     if (go == null) continue;
 
-                    var tmpTexts = go.GetComponentsInChildren<TMP_Text>(true);
+                    // Mirror TextExtractor's active-filtering: exclude inactive TMP_Text so
+                    // hidden/disabled sibling variants (e.g. off-state images) don't leak into
+                    // dialog title/body extraction. GetComponentsInChildren(false) already skips
+                    // inactive, and the activeInHierarchy re-check mirrors TextExtractor exactly.
+                    var tmpTexts = go.GetComponentsInChildren<TMP_Text>(false);
                     if (tmpTexts == null) continue;
 
                     foreach (var tmp in tmpTexts)
                     {
                         if (tmp == null) continue;
+                        if (!tmp.gameObject.activeInHierarchy) continue;
                         string rawText = tmp.text;
                         if (string.IsNullOrWhiteSpace(rawText)) continue;
 

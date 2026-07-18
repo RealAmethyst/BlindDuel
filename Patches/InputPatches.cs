@@ -17,6 +17,10 @@ namespace BlindDuel
     {
         private static Dictionary<int, KeyCode> _map;
 
+        // Must run BEFORE BrowseDirectionPatches: this postfix mutates __result
+        // (suppression + keyboard mapping) and BrowseDirection must observe the final value.
+        // Harmony runs higher-priority postfixes first, so High beats BrowseDirection's Low.
+        [HarmonyPriority(Priority.High)]
         static void Postfix(int Type, ref bool __result)
         {
             try
@@ -57,6 +61,10 @@ namespace BlindDuel
     {
         private static Dictionary<int, KeyCode> _map;
 
+        // Must run BEFORE BrowseDirectionPatches: this postfix mutates __result
+        // (suppression + keyboard mapping) and BrowseDirection must observe the final value.
+        // Harmony runs higher-priority postfixes first, so High beats BrowseDirection's Low.
+        [HarmonyPriority(Priority.High)]
         static void Postfix(int Type, ref bool __result)
         {
             try

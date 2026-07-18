@@ -8,6 +8,10 @@ namespace BlindDuel
     [HarmonyPatch(typeof(GamePad_PC), nameof(GamePad_PC.GetKeyDown))]
     class PatchBrowseDirectionGetKeyDown
     {
+        // Must run AFTER InputPatches: it reads the final __result to track browse direction,
+        // and InputPatches mutates __result. Harmony runs lower-priority postfixes last, so
+        // Low runs after InputPatches' High.
+        [HarmonyPriority(Priority.Low)]
         static void Postfix(int Type, ref bool __result)
         {
             BrowseDirectionTracker.TrackKeyDown(Type, __result);
@@ -17,6 +21,10 @@ namespace BlindDuel
     [HarmonyPatch(typeof(GamePad_PC), nameof(GamePad_PC.GetKey))]
     class PatchBrowseDirectionGetKey
     {
+        // Must run AFTER InputPatches: it reads the final __result to track browse direction,
+        // and InputPatches mutates __result. Harmony runs lower-priority postfixes last, so
+        // Low runs after InputPatches' High.
+        [HarmonyPriority(Priority.Low)]
         static void Postfix(int Type, ref bool __result)
         {
             BrowseDirectionTracker.TrackKey(Type, __result);
