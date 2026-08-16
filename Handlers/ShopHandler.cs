@@ -31,7 +31,7 @@ namespace BlindDuel
 
             try
             {
-                var shopVC = GetShopVC();
+                var shopVC = ScreenDetector.GetFocusVC<ShopViewController>();
                 var data = shopVC?.m_ShowcaseData;
                 if (data != null)
                 {
@@ -52,7 +52,7 @@ namespace BlindDuel
         {
             try
             {
-                var shopVC = GetShopVC();
+                var shopVC = ScreenDetector.GetFocusVC<ShopViewController>();
 
                 // Check main category tabs
                 if (IsMainTab(button, shopVC))
@@ -343,16 +343,6 @@ namespace BlindDuel
             bool isNew = newIcon != null && newIcon.gameObject.activeInHierarchy;
 
             return $"Rarity: {rarity}, New: {(isNew ? "Yes" : "No")}, Owned: {ownedText}";
-        }
-
-        private static ShopViewController GetShopVC()
-        {
-            try
-            {
-                var focusVC = ScreenDetector.GetFocusVC();
-                return focusVC?.TryCast<ShopViewController>();
-            }
-            catch { return null; }
         }
 
         /// <summary>

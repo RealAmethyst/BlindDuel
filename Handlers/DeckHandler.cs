@@ -102,7 +102,7 @@ namespace BlindDuel
 
             try
             {
-                var vc = GetDeckSelectVC();
+                var vc = ScreenDetector.GetFocusVC<DeckSelectViewController2>();
                 if (vc != null)
                 {
                     string deckNum = vc.m_TextDeckNum?.text?.Trim();
@@ -120,7 +120,7 @@ namespace BlindDuel
         {
             try
             {
-                var vc = GetDeckEditVC();
+                var vc = ScreenDetector.GetFocusVC<DeckEditViewController2>();
                 if (vc != null)
                 {
                     string deckName = vc.m_DeckName;
@@ -241,7 +241,7 @@ namespace BlindDuel
             // Index from m_Decks
             try
             {
-                var vc = GetDeckSelectVC();
+                var vc = ScreenDetector.GetFocusVC<DeckSelectViewController2>();
                 if (vc?.m_Decks != null)
                 {
                     int deckId = deckBox.deckID;
@@ -382,7 +382,7 @@ namespace BlindDuel
 
             try
             {
-                var vc = GetDeckEditVC();
+                var vc = ScreenDetector.GetFocusVC<DeckEditViewController2>();
                 if (vc != null)
                 {
                     var viewType = vc.currentView;
@@ -542,7 +542,7 @@ namespace BlindDuel
             // In-deck count
             try
             {
-                var vc = GetDeckEditVC();
+                var vc = ScreenDetector.GetFocusVC<DeckEditViewController2>();
                 if (vc != null)
                 {
                     int inDeck = CountCardInDeck(vc, cardId);
@@ -685,16 +685,5 @@ namespace BlindDuel
             return dirs.Count > 0 ? string.Join(", ", dirs) : null;
         }
 
-        // --- VC accessors ---
-
-        private static DeckSelectViewController2 GetDeckSelectVC()
-        {
-            return ScreenDetector.GetFocusVC()?.TryCast<DeckSelectViewController2>();
-        }
-
-        private static DeckEditViewController2 GetDeckEditVC()
-        {
-            return ScreenDetector.GetFocusVC()?.TryCast<DeckEditViewController2>();
-        }
     }
 }

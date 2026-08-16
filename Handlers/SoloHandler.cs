@@ -18,8 +18,7 @@ namespace BlindDuel
                 if (viewControllerName == "SoloSelectChapter")
                 {
                     // Chapter map: announce gate name
-                    var focusVC = ScreenDetector.GetFocusVC();
-                    var chapterVC = focusVC?.TryCast<SoloSelectChapterViewController>();
+                    var chapterVC = ScreenDetector.GetFocusVC<SoloSelectChapterViewController>();
                     if (chapterVC != null)
                     {
                         int gateId = chapterVC.m_GateId;
@@ -60,21 +59,18 @@ namespace BlindDuel
 
         public string OnButtonFocused(SelectionButton button)
         {
-            var focusVC = ScreenDetector.GetFocusVC();
-            if (focusVC == null) return null;
-
             // SoloGate: gate list buttons
-            var gateVC = focusVC.TryCast<SoloGateViewController>();
+            var gateVC = ScreenDetector.GetFocusVC<SoloGateViewController>();
             if (gateVC != null)
                 return ReadGateButton(button, gateVC);
 
             // SoloSelectChapter: chapter map nodes
-            var chapterVC = focusVC.TryCast<SoloSelectChapterViewController>();
+            var chapterVC = ScreenDetector.GetFocusVC<SoloSelectChapterViewController>();
             if (chapterVC != null)
                 return ReadChapterButton(button, chapterVC);
 
             // SoloMode portal: gate previews and category buttons
-            var soloVC = focusVC.TryCast<SoloModeViewController>();
+            var soloVC = ScreenDetector.GetFocusVC<SoloModeViewController>();
             if (soloVC != null)
                 return ReadPortalButton(button);
 

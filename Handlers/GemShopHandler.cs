@@ -110,24 +110,18 @@ namespace BlindDuel
         {
             try
             {
-                var focusVC = ScreenDetector.GetFocusVC();
-                if (focusVC == null) return null;
-
-                var gemShopVC = focusVC.TryCast<GemShopViewController>();
+                var gemShopVC = ScreenDetector.GetFocusVC<GemShopViewController>();
                 if (gemShopVC == null) return null;
 
                 var entityMap = gemShopVC.m_EntityWidgetMap;
                 if (entityMap == null) return null;
 
-                // Walk up from button to find the mapped GameObject
-                Transform current = button.transform;
-                for (int i = 0; i < 5 && current != null; i++)
-                {
-                    ProductWidget widget;
-                    if (entityMap.TryGetValue(current.gameObject, out widget))
-                        return widget;
-                    current = current.parent;
-                }
+                // Walk up from button to find the mapped GameObject (max 5 levels, as before).
+                TransformSearch.TryResolveByAncestor<ProductWidget>(
+                    button.transform, 5,
+                    go => entityMap.TryGetValue(go, out var widget) ? (true, widget) : (false, null),
+                    out var result);
+                return result;
             }
             catch { }
             return null;
@@ -137,8 +131,7 @@ namespace BlindDuel
         {
             try
             {
-                var focusVC = ScreenDetector.GetFocusVC();
-                var gemShopVC = focusVC?.TryCast<GemShopViewController>();
+                var gemShopVC = ScreenDetector.GetFocusVC<GemShopViewController>();
                 return gemShopVC?.m_ProductContexts?.Count ?? 0;
             }
             catch { return 0; }

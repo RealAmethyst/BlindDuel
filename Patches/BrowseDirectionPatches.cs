@@ -1,3 +1,4 @@
+using System;
 using HarmonyLib;
 using Il2CppYgomSystem;
 using UnityEngine;
@@ -7,6 +8,10 @@ namespace BlindDuel
     [HarmonyPatch(typeof(GamePad_PC), nameof(GamePad_PC.GetKeyDown))]
     class PatchBrowseDirectionGetKeyDown
     {
+        // Must run AFTER InputPatches: it reads the final __result to track browse direction,
+        // and InputPatches mutates __result. Harmony runs lower-priority postfixes last, so
+        // Low runs after InputPatches' High.
+        [HarmonyPriority(Priority.Low)]
         static void Postfix(int Type, ref bool __result)
         {
             BrowseDirectionTracker.TrackKeyDown(Type, __result);
@@ -16,6 +21,10 @@ namespace BlindDuel
     [HarmonyPatch(typeof(GamePad_PC), nameof(GamePad_PC.GetKey))]
     class PatchBrowseDirectionGetKey
     {
+        // Must run AFTER InputPatches: it reads the final __result to track browse direction,
+        // and InputPatches mutates __result. Harmony runs lower-priority postfixes last, so
+        // Low runs after InputPatches' High.
+        [HarmonyPriority(Priority.Low)]
         static void Postfix(int Type, ref bool __result)
         {
             BrowseDirectionTracker.TrackKey(Type, __result);
@@ -24,35 +33,22 @@ namespace BlindDuel
 
     static class BrowseDirectionTracker
     {
-        public static void TrackKeyDown(int type, bool result)
+        public static void TrackKeyDown(int type, bool result) => Track(type, result, Input.GetKeyDown);
+
+        public static void TrackKey(int type, bool result) => Track(type, result, Input.GetKey);
+
+        private static void Track(int type, bool result, Func<KeyCode, bool> isKeyActive)
         {
             if (DuelState.LastBrowsePosition < 0) return;
             if (!Application.isFocused) return;
 
-            if (type == GamePad.BUTTON_DOWN && (result || Input.GetKeyDown(KeyCode.DownArrow)))
+            if (type == GamePad.BUTTON_DOWN && (result || isKeyActive(KeyCode.DownArrow)))
             {
                 DuelState.BrowseDirection = 1;
                 return;
             }
 
-            if (type == GamePad.BUTTON_UP && (result || Input.GetKeyDown(KeyCode.UpArrow)))
-            {
-                DuelState.BrowseDirection = -1;
-            }
-        }
-
-        public static void TrackKey(int type, bool result)
-        {
-            if (DuelState.LastBrowsePosition < 0) return;
-            if (!Application.isFocused) return;
-
-            if (type == GamePad.BUTTON_DOWN && (result || Input.GetKey(KeyCode.DownArrow)))
-            {
-                DuelState.BrowseDirection = 1;
-                return;
-            }
-
-            if (type == GamePad.BUTTON_UP && (result || Input.GetKey(KeyCode.UpArrow)))
+            if (type == GamePad.BUTTON_UP && (result || isKeyActive(KeyCode.UpArrow)))
             {
                 DuelState.BrowseDirection = -1;
             }

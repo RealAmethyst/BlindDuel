@@ -197,129 +197,136 @@ namespace BlindDuel
         [HarmonyPostfix]
         static void Postfix(SelectionButton __instance, bool __result)
         {
-            // OnSelected returns false when the button was already selected — skip duplicate fires
-            if (!__result) return;
-
-            // Duel log handles its own navigation via PollSelection
-            if (DuelState.IsDuelLogOpen) return;
-
-            // Same button re-fired (rapid deselect/reselect) — skip to prevent
-            // handler state mutation producing different text on second fire.
-            // Exception: card selection lists recycle button objects (object pooling),
-            // so the same reference can represent a different card after scrolling.
-            if (Speech.IsSameButton(__instance))
+            try
             {
-                try
+                // OnSelected returns false when the button was already selected — skip duplicate fires
+                if (!__result) return;
+
+                // Duel log handles its own navigation via PollSelection
+                if (DuelState.IsDuelLogOpen) return;
+
+                // Same button re-fired (rapid deselect/reselect) — skip to prevent
+                // handler state mutation producing different text on second fire.
+                // Exception: card selection lists recycle button objects (object pooling),
+                // so the same reference can represent a different card after scrolling.
+                if (Speech.IsSameButton(__instance))
                 {
-                    if (__instance.GetComponentInParent<Il2CppYgomGame.Duel.CardSelectionList>() == null)
-                        return;
+                    try
+                    {
+                        if (__instance.GetComponentInParent<Il2CppYgomGame.Duel.CardSelectionList>() == null)
+                            return;
+                    }
+                    catch { return; }
                 }
-                catch { return; }
-            }
 
-            // Screen announcement pending — capture the button for QueueFocusedItem
-            // instead of speaking now (avoids speaking items before the header)
-            if (ScreenDetector.HasPendingScreen)
-            {
-                ScreenDetector.DeferFocusedButton(__instance);
-                return;
-            }
-
-            // Selection list pending — defer button until title is spoken.
-            // Mirrors HasPendingScreen but for duel CardSelectionList prompts.
-            if (DuelState.HasPendingSelection)
-            {
-                DuelState.DeferredSelectionButton = __instance;
-                return;
-            }
-
-            // After CardCommand closes, suppress auto-focused button so the
-            // selection prompt message speaks first without a blip.
-            if (DuelState.SuppressNextFieldFocus && NavigationState.IsInDuel)
-            {
-                DuelState.SuppressNextFieldFocus = false;
-                DuelState.DeferredSelectionButton = __instance;
-                return;
-            }
-
-            // Game-native transition check: suppress buttons that fire during
-            // screen transitions (e.g. brief OK button during gate entry).
-            // This catches transition artifacts that HasPendingScreen misses
-            // because our Poll() hasn't detected the VC change yet.
-            if (!ScreenDetector.IsScreenReady()) return;
-
-            // Extract text from button hierarchy
-            string text = TextExtractor.ExtractFirst(__instance.gameObject);
-
-            // Fallback: sibling text for toggle/radio widgets
-            if (string.IsNullOrWhiteSpace(text))
-                text = FindSiblingText(__instance.transform) ?? text;
-
-            // InputDigit dialog +/- buttons: replace the symbolic "-" / "＋" label
-            // with a spoken word so the screen reader doesn't fuse it with the
-            // sibling-index suffix into a misleading negative number.
-            string digitLabel = InputDigitWatcher.GetButtonLabel(__instance);
-            if (digitLabel != null) text = digitLabel;
-
-            // Let the active handler enhance the text
-            string enhanced = null;
-            var handler = HandlerRegistry.Current;
-            if (handler != null)
-            {
-                enhanced = handler.OnButtonFocused(__instance);
-                if (enhanced != null)
-                    text = enhanced;
-            }
-
-            // Dialog item list fallback: any screen's dialog with ItemNameText/ItemNumText
-            if (enhanced == null)
-            {
-                string dialogItem = TryReadDialogItem(__instance.transform);
-                if (dialogItem != null)
+                // Screen announcement pending — capture the button for QueueFocusedItem
+                // instead of speaking now (avoids speaking items before the header)
+                if (ScreenDetector.HasPendingScreen)
                 {
-                    text = dialogItem;
-                    enhanced = dialogItem;
+                    ScreenDetector.DeferFocusedButton(__instance);
+                    return;
                 }
+
+                // Selection list pending — defer button until title is spoken.
+                // Mirrors HasPendingScreen but for duel CardSelectionList prompts.
+                if (DuelState.HasPendingSelection)
+                {
+                    DuelState.DeferredSelectionButton = __instance;
+                    return;
+                }
+
+                // After CardCommand closes, suppress auto-focused button so the
+                // selection prompt message speaks first without a blip.
+                if (DuelState.SuppressNextFieldFocus && NavigationState.IsInDuel)
+                {
+                    DuelState.SuppressNextFieldFocus = false;
+                    DuelState.DeferredSelectionButton = __instance;
+                    return;
+                }
+
+                // Game-native transition check: suppress buttons that fire during
+                // screen transitions (e.g. brief OK button during gate entry).
+                // This catches transition artifacts that HasPendingScreen misses
+                // because our Poll() hasn't detected the VC change yet.
+                if (!ScreenDetector.IsScreenReady()) return;
+
+                // Extract text from button hierarchy
+                string text = TextExtractor.ExtractFirst(__instance.gameObject);
+
+                // Fallback: sibling text for toggle/radio widgets
+                if (string.IsNullOrWhiteSpace(text))
+                    text = FindSiblingText(__instance.transform) ?? text;
+
+                // InputDigit dialog +/- buttons: replace the symbolic "-" / "＋" label
+                // with a spoken word so the screen reader doesn't fuse it with the
+                // sibling-index suffix into a misleading negative number.
+                string digitLabel = InputDigitWatcher.GetButtonLabel(__instance);
+                if (digitLabel != null) text = digitLabel;
+
+                // Let the active handler enhance the text
+                string enhanced = null;
+                var handler = HandlerRegistry.Current;
+                if (handler != null)
+                {
+                    enhanced = handler.OnButtonFocused(__instance);
+                    if (enhanced != null)
+                        text = enhanced;
+                }
+
+                // Dialog item list fallback: any screen's dialog with ItemNameText/ItemNumText
+                if (enhanced == null)
+                {
+                    string dialogItem = TryReadDialogItem(__instance.transform);
+                    if (dialogItem != null)
+                    {
+                        text = dialogItem;
+                        enhanced = dialogItem;
+                    }
+                }
+
+                if (string.IsNullOrWhiteSpace(text)) return;
+
+                // If handler didn't provide text, use generic index as fallback
+                if (enhanced == null)
+                {
+                    var (index, total) = TransformSearch.GetButtonIndex(__instance);
+                    if (total > 1)
+                        text += $"\n{index} of {total}";
+                }
+
+                // After a screen/dialog/duel-message announcement, queue the auto-focused button
+                // instead of interrupting the preceding speech.
+                bool shouldQueue = NavigationState.DialogJustAnnounced
+                                || NavigationState.ScreenJustAnnounced
+                                || DuelState.MessageJustAnnounced;
+                if (shouldQueue)
+                {
+                    NavigationState.DialogJustAnnounced = false;
+                    NavigationState.ScreenJustAnnounced = false;
+                    DuelState.MessageJustAnnounced = false;
+                }
+
+                if (NavigationState.IsInDuel)
+                {
+                    // Defer all duel buttons by one frame. This ensures dialogs/prompts
+                    // that fire in the same frame (e.g. "Select battle position") speak
+                    // BEFORE the auto-focused button, not after.
+                    // If no dialog fires, Update() speaks it on the next frame (~16ms).
+                    DuelState.LastQueuedButtonText = text;
+                    DuelState.LastQueuedButtonFrame = UnityEngine.Time.frameCount;
+                    DuelState.LastQueuedButtonInterrupt = !shouldQueue;
+                    return;
+                }
+
+                if (shouldQueue)
+                    Speech.SayQueued(text);
+                else
+                    Speech.SayItem(text);
             }
-
-            if (string.IsNullOrWhiteSpace(text)) return;
-
-            // If handler didn't provide text, use generic index as fallback
-            if (enhanced == null)
+            catch (Exception ex)
             {
-                var (index, total) = TransformSearch.GetButtonIndex(__instance);
-                if (total > 1)
-                    text += $"\n{index} of {total}";
+                Log.Write($"[PatchOnSelected] {ex.Message}");
             }
-
-            // After a screen/dialog/duel-message announcement, queue the auto-focused button
-            // instead of interrupting the preceding speech.
-            bool shouldQueue = NavigationState.DialogJustAnnounced
-                            || NavigationState.ScreenJustAnnounced
-                            || DuelState.MessageJustAnnounced;
-            if (shouldQueue)
-            {
-                NavigationState.DialogJustAnnounced = false;
-                NavigationState.ScreenJustAnnounced = false;
-                DuelState.MessageJustAnnounced = false;
-            }
-
-            if (NavigationState.IsInDuel)
-            {
-                // Defer all duel buttons by one frame. This ensures dialogs/prompts
-                // that fire in the same frame (e.g. "Select battle position") speak
-                // BEFORE the auto-focused button, not after.
-                // If no dialog fires, Update() speaks it on the next frame (~16ms).
-                DuelState.LastQueuedButtonText = text;
-                DuelState.LastQueuedButtonFrame = UnityEngine.Time.frameCount;
-                DuelState.LastQueuedButtonInterrupt = !shouldQueue;
-                return;
-            }
-
-            if (shouldQueue)
-                Speech.SayQueued(text);
-            else
-                Speech.SayItem(text);
         }
     }
 

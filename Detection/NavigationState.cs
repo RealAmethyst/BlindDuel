@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace BlindDuel
 {
     /// <summary>
@@ -13,29 +11,5 @@ namespace BlindDuel
         public static bool IsInDuel { get; set; }
         public static bool DialogJustAnnounced { get; set; }
         public static bool ScreenJustAnnounced { get; set; }
-
-        public static readonly Dictionary<string, Menu> VCNameToMenu = new()
-        {
-            { "DuelMenu", Menu.Duel },
-            { "DeckMenu", Menu.Deck },
-            { "SoloMenu", Menu.Solo },
-            { "ShopMenu", Menu.Shop },
-            { "MissionMenu", Menu.Missions },
-            { "NotificationMenu", Menu.Notifications },
-            { "GameSettingMenu", Menu.Settings },
-            { "DuelPassMenu", Menu.DuelPass }
-        };
-
-        public static readonly Dictionary<string, string> ScreenHeaderToMenu = new()
-        {
-            { "DUEL", "Duel" },
-            { "DECK", "Deck" },
-            { "SOLO", "Solo" },
-            { "SHOP", "Shop" },
-            { "MISSION", "Missions" },
-            { "Notifications", "Notifications" },
-            { "Game Settings", "Settings" },
-            { "Duel Pass", "Duel Pass" }
-        };
     }
 }

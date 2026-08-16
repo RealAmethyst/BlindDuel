@@ -6,9 +6,6 @@ namespace BlindDuel
 {
     public class DuelHandler : IMenuHandler
     {
-        // Pending selection list index to queue after card speech
-        private static string _pendingSelectionIndex;
-
         // Dedup: OnSelected fires 3x during list setup for the same button.
         // Track by button reference so two copies of the same card (different
         // buttons, same cardid) both read, but the 3 setup fires are caught.
@@ -211,13 +208,6 @@ namespace BlindDuel
                 Speech.SayItem(summary);
         }
 
-        private static bool IsPileBrowsePosition(int position)
-        {
-            return position == Engine.PosGrave
-                || position == Engine.PosExclude
-                || position == Engine.PosExtra;
-        }
-
         private static string BuildPileZoneLabel(int player, int position, string index)
         {
             string side = DuelState.IsMyPlayer(player) ? "" : "Opponent's ";
@@ -233,17 +223,6 @@ namespace BlindDuel
                 return index;
 
             return !string.IsNullOrEmpty(index) ? $"{zone}, {index}" : zone;
-        }
-
-        /// <summary>
-        /// Consume and return the pending selection index, clearing it.
-        /// Called by ReadCardDelayed after card speech to queue index.
-        /// </summary>
-        public static string ConsumeSelectionIndex()
-        {
-            string idx = _pendingSelectionIndex;
-            _pendingSelectionIndex = null;
-            return idx;
         }
 
         /// <summary>
@@ -297,66 +276,6 @@ namespace BlindDuel
             }
             catch { }
             return false;
-        }
-
-        /// <summary>
-        /// Find a card's "X of Y" index string by scanning the Engine zone
-        /// for a matching card ID.
-        /// </summary>
-        private static string FindCardIndex(int player, int position, int totalCards, int cardid)
-        {
-            try
-            {
-                for (int i = 0; i < totalCards; i++)
-                {
-                    if (Engine.GetCardID(player, position, i) == cardid)
-                        return $"{i + 1} of {totalCards}";
-                }
-            }
-            catch { }
-            return null;
-        }
-
-        /// <summary>
-        /// Get 0-based index and total count of a button in a duel card list.
-        /// Walks up the hierarchy looking for either:
-        ///   - "DuelListCard" ancestor (selection lists)
-        ///   - "template(Clone)" ancestor whose parent is "Content" (browse view)
-        /// Returns (-1, 0) if no matching ancestor is found — this prevents
-        /// the zone browse fallback from firing on unrelated buttons.
-        /// </summary>
-        private static (int index, int total) GetDuelListCardIndex(SelectionButton button)
-        {
-            try
-            {
-                var current = button.transform;
-                for (int i = 0; i < 6 && current != null; i++)
-                {
-                    bool match = current.name.Contains("DuelListCard")
-                              || (current.name == "template(Clone)"
-                                  && current.parent != null
-                                  && current.parent.name == "Content");
-
-                    if (match)
-                    {
-                        var container = current.parent;
-                        if (container == null) break;
-
-                        int idx = -1, total = 0;
-                        for (int j = 0; j < container.childCount; j++)
-                        {
-                            var child = container.GetChild(j);
-                            if (!child.gameObject.activeInHierarchy) continue;
-                            if (child == current) idx = total;
-                            total++;
-                        }
-                        return (idx, total);
-                    }
-                    current = current.parent;
-                }
-            }
-            catch (Exception ex) { Log.Write($"[DuelHandler] ListCardIndex: {ex.Message}"); }
-            return (-1, 0);
         }
     }
 }

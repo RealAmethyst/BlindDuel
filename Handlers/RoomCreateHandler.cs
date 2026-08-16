@@ -44,7 +44,7 @@ namespace BlindDuel
                     return;
                 }
 
-                var vc = GetVC();
+                var vc = ScreenDetector.GetFocusVC<RoomCreateViewController>();
                 if (vc == null) return;
                 if (!TryGetRow(vc, btn, out var row)) return;
 
@@ -77,7 +77,7 @@ namespace BlindDuel
                     return !string.IsNullOrWhiteSpace(txt) ? txt : "Create Room";
                 }
 
-                var vc = GetVC();
+                var vc = ScreenDetector.GetFocusVC<RoomCreateViewController>();
                 if (vc == null) return null;
 
                 if (TryGetRow(vc, button, out var row))
@@ -93,21 +93,13 @@ namespace BlindDuel
             var isv = vc.isv;
             if (isv == null) return false;
 
-            Transform t = button.transform;
-            for (int i = 0; i < 8 && t != null; i++)
-            {
-                try
+            return TransformSearch.TryResolveByAncestor<GameObject>(button.transform, 8,
+                go =>
                 {
-                    if (isv.GetDataIndexByEntity(t.gameObject) >= 0)
-                    {
-                        row = t.gameObject;
-                        return true;
-                    }
-                }
-                catch { }
-                t = t.parent;
-            }
-            return false;
+                    try { return isv.GetDataIndexByEntity(go) >= 0 ? (true, go) : (false, null); }
+                    catch { return (false, null); }
+                },
+                out row);
         }
 
         private static string FormatSettingRow(GameObject row)
@@ -130,12 +122,6 @@ namespace BlindDuel
                 if (t == null) return null;
                 return TextExtractor.ExtractFirst(t.gameObject);
             }
-            catch { return null; }
-        }
-
-        private static RoomCreateViewController GetVC()
-        {
-            try { return ScreenDetector.GetFocusVC()?.TryCast<RoomCreateViewController>(); }
             catch { return null; }
         }
     }

@@ -28,10 +28,7 @@ namespace BlindDuel
         {
             try
             {
-                var focusVC = ScreenDetector.GetFocusVC();
-                if (focusVC == null) return null;
-
-                var regVC = focusVC.TryCast<CardListBrowserRegulationFilterViewController>();
+                var regVC = ScreenDetector.GetFocusVC<CardListBrowserRegulationFilterViewController>();
                 if (regVC == null) return null;
 
                 // Try card widget first
@@ -55,17 +52,10 @@ namespace BlindDuel
             if (widgetDic == null) return null;
 
             // Walk up from button to find the CardWidget in the dictionary
-            CardListBrowserRegulationFilterViewController.CardWidget cardWidget = null;
-            Transform current = button.transform;
-            for (int i = 0; i < 5 && current != null; i++)
-            {
-                if (widgetDic.TryGetValue(current.gameObject, out var widget))
-                {
-                    cardWidget = widget;
-                    break;
-                }
-                current = current.parent;
-            }
+            TransformSearch.TryResolveByAncestor<CardListBrowserRegulationFilterViewController.CardWidget>(
+                button.transform, 5,
+                go => widgetDic.TryGetValue(go, out var widget) ? (true, widget) : (false, null),
+                out var cardWidget);
 
             if (cardWidget == null) return null;
 

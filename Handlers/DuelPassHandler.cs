@@ -233,20 +233,7 @@ namespace BlindDuel
             return null;
         }
 
-        private static DuelpassRewardButtonWidget FindRewardWidget(SelectionButton button)
-        {
-            var transform = button.transform;
-            for (int i = 0; i < 4 && transform != null; i++)
-            {
-                try
-                {
-                    var widget = transform.GetComponent<DuelpassRewardButtonWidget>();
-                    if (widget != null) return widget;
-                }
-                catch { }
-                transform = transform.parent;
-            }
-            return null;
-        }
+        private static DuelpassRewardButtonWidget FindRewardWidget(SelectionButton button) =>
+            button.GetComponentInParent<DuelpassRewardButtonWidget>();
     }
 }

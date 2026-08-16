@@ -108,7 +108,5 @@ namespace BlindDuel
         {
             return DuelState.GetMyPlayerNum() == 0 ? 1 : 0;
         }
-
-        public static void Reset() { }
     }
 }

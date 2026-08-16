@@ -87,18 +87,6 @@ namespace BlindDuel
         }
 
         /// <summary>
-        /// Returns true if the text should be filtered out (not spoken).
-        /// </summary>
-        public static bool IsBannedText(string text, bool hasMenuContext)
-        {
-            if (string.IsNullOrWhiteSpace(text)) return true;
-            if (BannedTexts.Contains(text)) return true;
-
-            Regex pattern = hasMenuContext ? WhitespaceOnly : WhitespaceOrPunctuation;
-            return pattern.IsMatch(text);
-        }
-
-        /// <summary>
         /// Returns true if the text should be filtered out, considering the element name.
         /// </summary>
         public static bool IsBannedText(GameObject textElement, string text, bool hasMenuContext)

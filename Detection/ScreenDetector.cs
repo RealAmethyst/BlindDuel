@@ -87,7 +87,7 @@ namespace BlindDuel
                 var vcm = contentManager.GetComponent<ViewControllerManager>();
                 return vcm == null || vcm.IsReadyTransition();
             }
-            catch { return true; }
+            catch (Exception ex) { Log.Write($"[IsScreenReady] {ex.Message}"); return true; }
         }
 
         internal static ViewController GetFocusVC()
@@ -97,6 +97,12 @@ namespace BlindDuel
             var vcm = contentManager.GetComponent<ViewControllerManager>();
             return vcm?.GetFocusViewController();
         }
+
+        /// <summary>
+        /// Generic convenience accessor: fetch the current focus ViewController and
+        /// cast it to a specific subclass in one call.
+        /// </summary>
+        internal static T GetFocusVC<T>() where T : ViewController => GetFocusVC()?.TryCast<T>();
 
         internal static ElementObjectManager GetView(ViewController vc)
         {

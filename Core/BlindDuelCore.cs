@@ -164,12 +164,8 @@ namespace BlindDuel
         /// </summary>
         public void ReadCardDelayed()
         {
-            string selIdx = DuelHandler.ConsumeSelectionIndex();
             bool useQueued = PatchCardSelectionListSetTitle.ConsumeQueuedFlag();
-
-            string suffix = !string.IsNullOrEmpty(selIdx) ? $"\n{selIdx}" : null;
-
-            CardReader.ReadAndSpeak(suffix: suffix, queued: useQueued);
+            CardReader.ReadAndSpeak(suffix: null, queued: useQueued);
         }
 
         /// <summary>
